@@ -1,24 +1,27 @@
 # Why there is no front end
 
-Leecare is a database with a subscription. The tables underneath it are ordinary: a few entities, a few relationships, a handful of workflows you repeat every week. What you pay for is the layer on top that lets people who do not write SQL get at those tables. Screens, filters, dashboards, forms.
+Leecare is a database with a subscription. The records underneath are ordinary: residents, assessments, care plan reviews, notes, weights, wounds, incidents, restraints, shifts. What you pay for is the layer on top that lets people who do not write SQL get at them: screens, forms, filters, dashboards, each module licensed on its own.
 
-That layer used to be the whole product, because talking to a database was hard. It is not hard any more. Open this folder in Claude Code, describe what you want, and it writes the query, runs it, and explains the answer. Ask a question the dashboard never had a chart for and you still get an answer.
+That layer was the product because talking to a database was hard. It is not any more. Open this folder in Claude Code, ask "which incidents still need a SIRS report?" or "who has lost weight this quarter?", and it runs the query and explains the answer.
 
 ## What you gain
 
-- **Better answers.** A dashboard shows what the vendor decided to chart. Here you ask your own question, in your own words, and get it answered against your own data.
-- **No seats.** Everyone who needs to look can look. The bill does not grow with headcount.
-- **Your data in your Postgres.** Plain tables. Back them up, query them from anything, leave any time. There is no export step because there is nothing to leave.
-- **A process that matches you.** When your way of working changes, you add a command. You do not wait for a feature request to clear.
+- **Answers the screens never had.** Which nights had no registered nurse. Which residents fall at the same time of night. What your quality indicators will look like before you submit.
+- **The clocks in one place.** SIRS, Section 31, interRAI, care plans, consent reviews, registrations, quality indicators, all checked by one command against cited rules.
+- **No modules and no seats.** Every manager and RN who needs to look can look.
+- **Your records in your database.** Plain tables. Back them up, query them from anything, leave any time.
 
-## What you give up
+## What a screen still does better
 
-- **A visual board.** Stages are a table you ask about, not cards you drag.
-- **A phone app.** It runs where Claude Code runs.
-- **A vendor help desk.** This is open source. Enterprise DNA supports the installed version for businesses that want someone to call.
+Be honest about this before you switch:
+
+- **Charting at the bedside.** Carers record care on a tablet as they go. Talking to Claude Code at a desk is not that. Enterprise DNA builds a simple charting screen for carers on top of the same database when a home wants one.
+- **Medication rounds.** Keep your electronic medication chart. This system records the changes, not the administration.
+- **Offline.** It runs where your database is reachable.
+- **A help desk.** This is open source. Enterprise DNA supports the installed version for providers that want someone to call.
 
 ## Who this fits
 
-Small teams who already use Claude Code, or who would rather learn to ask than learn another interface. If your team needs a screen to look at all day, keep Leecare. If you need the answers more than the screens, this is cheaper, faster and yours.
+Groups where the clinical managers and the director of nursing spend their week chasing reports, clocks and audits, and want the answers more than another screen. If your carers need a tablet screen all shift, keep that screen and put this behind it.
 
 Installed and run for you: https://enterprisedna.co/omni/instead-of/leecare

@@ -1,11 +1,39 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
-    "file": "name",
+    "name": "monthly-care-statement",
+    "title": "Monthly care statement",
+    "for_each": "select r.id, r.code || ' ' || r.first_name || ' ' || r.last_name || ' ' || to_char(date_trunc('month', current_date) - interval '1 month', 'YYYY-MM') as label from residents r join homes h on h.id = r.home_id where h.jurisdiction <> 'NZ' and r.status in ('permanent', 'in-hospital') order by r.code",
+    "file": "label",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      { "title": "About this statement", "layout": "record", "note": "A short record of the care and support you received last month. Ask the care manager about anything in it.", "sql": "select left(r.first_name, 1) || left(r.last_name, 1) || coalesce(to_char(r.born_on, 'YY'), '') as statement_id, h.name as home, to_char(date_trunc('month', current_date) - interval '1 month', 'FMMonth YYYY') as month, case when r.statement_to_representative then r.representative else 'The resident' end as copy_to from residents r join homes h on h.id = r.home_id where r.id = $1" },
+      { "title": "Wellbeing activities", "sql": "select to_char(done_on, 'DD Mon') as date, domain, activity from activities where resident_id = $1 and done_on >= date_trunc('month', current_date) - interval '1 month' and done_on < date_trunc('month', current_date) order by done_on" },
+      { "title": "Medication changes", "sql": "select to_char(changed_on, 'DD Mon') as date, medicine, change, detail from medication_changes where resident_id = $1 and changed_on >= date_trunc('month', current_date) - interval '1 month' and changed_on < date_trunc('month', current_date) order by changed_on" },
+      { "title": "Appointments", "sql": "select to_char(seen_on, 'DD Mon') as date, with_whom as seen_by, reason, case when offsite then 'away from the home' else 'at the home' end as where_seen from appointments where resident_id = $1 and seen_on >= date_trunc('month', current_date) - interval '1 month' and seen_on < date_trunc('month', current_date) order by seen_on" },
+      { "title": "Nutrition and weight", "sql": "select to_char(weighed_on, 'DD Mon YYYY') as weighed, kg || ' kg' as weight, case when planned_loss then 'planned' else '' end as note from weights where resident_id = $1 and weighed_on < date_trunc('month', current_date) order by weighed_on desc limit 2" },
+      { "title": "Falls and skin", "sql": "select to_char(occurred_at, 'DD Mon') as date, kind, injury, description from incidents where resident_id = $1 and kind in ('fall', 'skin') and occurred_at >= date_trunc('month', current_date) - interval '1 month' and occurred_at < date_trunc('month', current_date) order by occurred_at" },
+      { "title": "Wounds", "sql": "select kind, coalesce('stage ' || stage, '') as stage, site, to_char(found_on, 'DD Mon') as found, coalesce(to_char(healed_on, 'DD Mon'), 'healing') as healed from wounds where resident_id = $1 and found_on < date_trunc('month', current_date) and (healed_on is null or healed_on >= date_trunc('month', current_date) - interval '1 month')" }
+    ]
+  },
+  {
+    "name": "incident-report",
+    "title": "Incident report",
+    "for_each": "select i.id, i.reference || ' ' || h.code as label from incidents i join homes h on h.id = i.home_id where i.sirs_priority is not null or i.s31_required or i.injury <> 'none' order by i.reference",
+    "file": "label",
+    "sections": [
+      { "title": "The incident", "layout": "record", "sql": "select c.reference, h.name as home, r.first_name || ' ' || r.last_name as resident, c.kind, c.injury, to_char(c.occurred_at, 'DD Mon YYYY HH24:MI') as occurred, to_char(c.aware_at, 'DD Mon YYYY HH24:MI') as provider_aware, coalesce('Priority ' || c.sirs_priority || ', ' || c.sirs_type, case when c.s31_required then 'Section 31 notification' end, 'Not reportable') as reportable, to_char(c.report_due_at, 'DD Mon YYYY HH24:MI') as report_due, coalesce(to_char(c.reported_at, 'DD Mon YYYY HH24:MI'), 'not yet') as reported, c.report_reference, c.open_disclosure_on as open_disclosure, c.closed_on from incident_clock c join homes h on h.code = c.home left join residents r on r.code = c.resident where c.incident_id = $1" },
+      { "title": "What happened", "layout": "record", "sql": "select description, actions as what_we_did from incidents where id = $1" }
+    ]
+  },
+  {
+    "name": "handover-sheet",
+    "title": "Clinical handover",
+    "for_each": "select id, code || ' ' || name as label from homes order by code",
+    "file": "label",
+    "sections": [
+      { "title": "Residents and alerts", "sql": "select s.room, s.code, s.name, s.status, s.care_level, s.alerts from resident_status s join homes h on h.code = s.home where h.id = $1 order by s.room" },
+      { "title": "Open wounds", "sql": "select w.resident, w.name, w.kind, w.stage, w.site, w.next_dressing_on as next_dressing from wound_status w join homes h on h.code = w.home where h.id = $1 order by w.next_dressing_on" },
+      { "title": "Restrictive practices in use", "sql": "select p.resident, p.name, p.kind, p.description, p.review_due_on as review_due from restrictive_status p join homes h on h.code = p.home where h.id = $1 order by p.resident" },
+      { "title": "Incidents in the last 72 hours", "sql": "select c.reference, c.resident, c.kind, c.injury, to_char(c.occurred_at, 'DD Mon HH24:MI') as occurred, c.description from incident_clock c join homes h on h.code = c.home where h.id = $1 and c.occurred_at >= now() - interval '72 hours' order by c.occurred_at desc" }
     ]
   }
 ]

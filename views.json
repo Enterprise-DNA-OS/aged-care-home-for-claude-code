@@ -2,12 +2,51 @@
   {
     "name": "week",
     "title": "This week",
-    "subtitle": "Aged Care Home for Claude Code: what needs attention, rendered by npm run view",
+    "subtitle": "Aged Care Home for Claude Code: reporting clocks, clinical risks and the roster, rendered by npm run view",
     "sections": [
       {
-        "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
+        "title": "Reportable incidents not yet reported",
+        "note": "SIRS Priority 1 within 24 hours of becoming aware, Priority 2 within 30 days. Section 31 as soon as practicable.",
+        "sql": "select reference, home, resident, coalesce('P' || sirs_priority || ' ' || sirs_type, 'Section 31') as scheme, to_char(aware_at, 'DD Mon HH24:MI') as aware, to_char(report_due_at, 'DD Mon HH24:MI') as due, case when report_late then 'PAST DUE' else '' end as flag from incident_clock where (sirs_priority is not null or s31_required) and reported_at is null order by coalesce(report_due_at, aware_at)"
+      },
+      {
+        "title": "Restrictive practices missing consent, a plan or a review",
+        "sql": "select resident, name, home, kind, description, case when no_consent then 'no consent' when no_plan then 'no plan' else 'review overdue' end as missing from restrictive_status where no_consent or no_plan or review_overdue order by home, resident"
+      },
+      {
+        "title": "Unplanned weight loss of 5% or more",
+        "sql": "select code, name, home, earlier_kg as then_kg, latest_kg as now_kg, change_pct || '%' as change from weight_trend where change_pct <= -5 and not planned_loss order by change_pct"
+      },
+      {
+        "title": "Open wounds",
+        "sql": "select resident, name, home, kind, stage, site, days_open, next_dressing_on, case when dressing_overdue then 'OVERDUE' else '' end as flag from wound_status order by home, resident"
+      }
+    ]
+  },
+  {
+    "name": "workforce",
+    "title": "Workforce",
+    "subtitle": "Care minutes, registrations and police checks",
+    "sections": [
+      {
+        "title": "Care minutes per resident per day, last 28 days",
+        "note": "Enrolled nurse minutes are shown on their own here; the CLI counts them toward the RN target up to 10% of it.",
+        "sql": "select home, jurisdiction, round(sum(total_minutes) / nullif(sum(residents), 0), 1) as total, max(care_minutes_target) as target, round(sum(rn_minutes) / nullif(sum(residents), 0), 1) as rn, max(rn_minutes_target) as rn_target, round(sum(en_minutes) / nullif(sum(residents), 0), 1) as en from care_minutes_daily where day >= current_date - 28 group by home, jurisdiction order by home"
+      },
+      {
+        "title": "Registrations and police checks inside 60 days",
+        "sql": "select code, full_name, role, home, registration_expires_on, screening_expires_on, last_shift_on from staff_checks where registration_days_left <= 60 or screening_days_left <= 60 order by least(coalesce(registration_days_left, 99999), coalesce(screening_days_left, 99999))"
+      }
+    ]
+  },
+  {
+    "name": "residents",
+    "title": "Residents",
+    "subtitle": "Every resident, their last interRAI and care plan review",
+    "sections": [
+      {
+        "title": "Residents",
+        "sql": "select home, room, code, name, status, care_level, days_here, last_interrai_on, last_care_plan_on, care_plan_due_on, latest_kg from resident_status order by home, room"
       }
     ]
   }

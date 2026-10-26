@@ -1,0 +1,5 @@
+Resident Name,Date of Birth,Room,Admission Date,Care Type,AN-ACC Class,GP,Next of Kin,NOK Email
+"Hollis, June",12/03/1937,11,04/02/2025,Permanent,AN-ACC class 7,Dr H. Singh,Carol Hollis (daughter),carol.hollis@example.com
+"Murphy, Kevin",30/09/1941,12,18/07/2026,Permanent,AN-ACC class 9,Dr J. Fraser,Siobhan Murphy (wife),siobhan.m@example.com
+"Watts, Lorna",05/05/1944,R1,01/10/2026,Respite,Respite high,Dr H. Singh,Dean Watts (son),dean.watts@example.com
+,,,,,,,,
